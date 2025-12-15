@@ -6,7 +6,7 @@
 
 [![High Load](https://img.shields.io/badge/Architecture-High_Load-orange?style=for-the-badge&logo=appveyor)](https://github.com/tg-serverless)
 [![GitOps](https://img.shields.io/badge/Delivery-GitOps-blueviolet?style=for-the-badge&logo=git)](https://github.com/tg-serverless)
-[![Kubernetes](https://img.shields.io/badge/Orchestration-K3s-326CE5?style=for-the-badge&logo=kubernetes)](https://github.com/tg-serverless)
+[![Kubernetes](https://img.shields.io/badge/Orchestration-K8s-326CE5?style=for-the-badge&logo=kubernetes)](https://github.com/tg-serverless)
 
 <p align="center">
   <b>TG-Serverless</b> — это облачная PaaS платформа, позволяющая разворачивать, масштабировать и мониторить тысячи Telegram-ботов с единой точки входа.
