@@ -1,62 +1,49 @@
 # 🗺️ Platform Roadmap
 
-Ниже представлен план развития платформы от MVP до состояния **Enterprise PaaS**. Основной фокус — на наблюдаемости, безопасности выполнения недоверенного кода и устойчивости к высоким нагрузкам.
+## 👁️ Phase 1: Architecture & Traffic Control
 
-## 👁️ Phase 1: Observability & Logging
-**Цель:** Обеспечить полную прозрачность работы платформы и пользовательских ботов в реальном времени с минимальным потреблением ресурсов.
+* [ ] **Shuffle Sharding**
+* Делаем shuffle sharding вместо обычной репликации
 
-- [ ] **ClickHouse Data Warehouse**
-    - Развертывание кластера через Altinity Operator.
-    - Проектирование схемы данных: `logs` (сырые данные с TTL 7 дней) и `metrics_1m` (агрегаты для дашбордов).
-- [ ] **Structured Logging**
-    - Внедрение `uber/zap` во все системные компоненты (Gateway, Sidecar, API).
-    - Стандартизация формата логов для пользовательских раннеров (JSON Output).
+* [ ] **Egress Gateway (go, fiber)**
+* Пишем Gateway для анализа исходящего трафика ботов + передаем в deployments ботов BotID и на Engress Gateway заменяем на telegram bot token
 
-## 🛡️ Phase 2: Security & Isolation
-**Цель:** Реализация концепции "Defense in Depth". Полная изоляция пользовательского кода от инфраструктуры кластера.
+## 🛡️ Phase 2: Zero Trust Security
 
-- [ ] **Network Hardening (Cilium/Calico)**
-    - Политика **Default Deny** для всех подов в неймспейсе `bots`.
-    - Блокировка доступа к внутренней сети кластера (`10.0.0.0/8`) и Metadata-сервисам облака.
-- [ ] **Runtime Isolation (gVisor)**
-    - Внедрение `runsc` (gVisor) на рабочих нодах для изоляции ядра Linux.
-    - Настройка `RuntimeClass` в Kubernetes для запуска ботов в песочнице.
 
-## 🕵️ Phase 3: Anti-Fraud System
-**Цель:** Автоматическое обнаружение и блокировка вредоносной активности (спам, фишинг) в реальном времени.
+* [ ] **Network Hardening (Cilium / Calico)**
+* Бот не видит соседние поды, не имеет доступа к внутренней сети кластера (`10.0.0.0/8`) и API облака (Metadata service).
 
-- [ ] **Fraud Detection Engine**
-    - Асинхронный стриминг исходящих запросов из Sidecar в топик Kafka `fraud-stream`.
-    - Реализация аналитического воркера на Go.
-- [ ] **Scoring Rules**
-    - **Rate Limiting:** Детекция аномалий (например, >30 msg/sec на токен).
-    - **Content Analysis:** Regex-анализ на наличие фишинговых ссылок и стоп-слов.
-- [ ] **Automated Kill Switch**
-    - Интеграция с Redis для мгновенной блокировки трафика на уровне Sidecar.
-    - API для автоматического удаления деплойментов нарушителей.
 
-## 🔥 Phase 4: High Load Testing & Chaos Engineering
-**Цель:** Валидация архитектурных пределов и сценариев восстановления.
+* [ ] **Hardened Runtime (gVisor)**
+* Внедряем `runsc` (gVisor) для изоляции на уровне ядра.
 
-- [ ] **Load Testing Suite (k6 / Locust)**
-    - Разработка сценариев: эмуляция вебхуков, задержки обработки, массовые рассылки.
-    - Бенчмаркинг вертикального (1 тяжелый бот) и горизонтального (1000 легких ботов) масштабирования.
-- [ ] **Chaos Engineering**
-    - Тестирование отказа компонентов (Kafka Brokers, Redis Master) под нагрузкой.
-    - Проверка работы буферизации (Backpressure) при разрывах сети.
-    - Валидация механизма **Scale-to-Zero** и холодного старта.
+
+## 🕵️ Phase 3: Anti-Fraud & Governance
+
+* [ ] **Fraud Detection Engine**
+* Анализируем трафик ботов с целью нахождения ботов "нарушающих EULA". 
+
+
+* [ ] **Scoring Rules**
+* **Rate Limiting:** Ловим аномалии (например, резкий скачок >30 RPS на токен).
+* **Content Analysis:** Быстрый regex-анализ и эвристики на фишинг и стоп-слова.
+
+
+## 🔥 Phase 4: Battle Testing
+
+* [ ] **High Load Benchmarks (k6)**
+
+
 
 ---
 
-## 🏆 Target Technology Stack
+## 🏆 Целевой технологический стек
 
-К моменту завершения Roadmap платформа будет базироваться на следующих технологиях:
-
-| Уровень | Компоненты |
-| :--- | :--- |
-| **Control Plane** | `Go API`, `ArgoCD` (GitOps), `cdk8s`, `PostgreSQL` |
+| Слой | Технологии |
+| --- | --- |
+| **Control Plane** | `Go API`, `ArgoCD` (GitOps), `cdk8s` (IaC), `PostgreSQL` |
 | **Data Plane** | `Go Gateway` (Fiber/Fasthttp), `Apache Kafka` (KRaft), `Go Sidecar` (Franz-Go) |
-| **Runtime** | `K3s`, `gVisor` (Sandbox), `Docker` |
-| **Network Security** | `Cilium`/`Calico`, `iptables hijacking` |
-| **Auth & Governance** | `Redis ACL`, `Kafka SASL`, `Anti-Fraud Worker` |
-| **Observability** | `ClickHouse`, `Grafana` |
+| **Runtime** | `K3s` (Orchestration), `gVisor` (Sandbox), `Docker` |
+| **Security** | `Cilium` (Network Policy), `Redis ACL`, `Kafka SASL (Scram)` |
+| **Observability** | `ClickHouse` (Logs/Metrics), `Grafana` |
