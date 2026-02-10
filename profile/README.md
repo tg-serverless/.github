@@ -19,7 +19,7 @@
 ---
 
 ## 🏗 Архитектура
-![serverless](serverless.jpg)
+![serverless](serverless.svg)
 
 ---
 
